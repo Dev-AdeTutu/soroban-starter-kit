@@ -11,3 +11,6 @@ export { SearchPage } from './SearchPage';
 export { ResponsiveNav } from './ResponsiveNav';
 export { Breadcrumb } from './Breadcrumb';
 export { ContextualNav } from './ContextualNav';
+export { Chart } from './Chart';
+export { Dashboard } from './Dashboard';
+export { LiveDataFeed } from './LiveDataFeed';
