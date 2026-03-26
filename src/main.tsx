@@ -8,6 +8,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { TutorialProvider } from './context/TutorialContext';
 import { PWAProvider } from './context/PWAContext';
 import { SecurityProvider } from './context/SecurityContext';
+import { WalletProvider } from './context/WalletContext';
 import './styles/index.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -16,13 +17,15 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <TutorialProvider>
         <PWAProvider>
           <SecurityProvider>
-            <ConnectivityProvider>
-              <StorageProvider>
-                <TransactionQueueProvider>
-                  <App />
-                </TransactionQueueProvider>
-              </StorageProvider>
-            </ConnectivityProvider>
+            <WalletProvider>
+              <ConnectivityProvider>
+                <StorageProvider>
+                  <TransactionQueueProvider>
+                    <App />
+                  </TransactionQueueProvider>
+                </StorageProvider>
+              </ConnectivityProvider>
+            </WalletProvider>
           </SecurityProvider>
         </PWAProvider>
       </TutorialProvider>
