@@ -29,6 +29,7 @@ export { TransactionHistory } from './TransactionHistory';
 export { ContractInteraction } from './ContractInteraction';
 export { PerformanceDashboard } from './PerformanceDashboard';
 export { AccessibilityDashboard } from './AccessibilityDashboard';
+export { ComponentDocs } from './ComponentDocs';
 export { ConnectivityStatus, OfflineBanner } from "./ConnectivityStatus";
 export { TransactionItem, TransactionList } from "./TransactionItem";
 export { BalanceDisplay, BalanceList } from "./BalanceDisplay";
