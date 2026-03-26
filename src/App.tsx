@@ -1,23 +1,23 @@
 import React, { useState } from 'react';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { ConnectivityStatus, OfflineBanner } from './components/ConnectivityStatus';
 import { TransactionList } from './components/TransactionItem';
 import { AdvancedBalanceDisplay } from './components/AdvancedBalanceDisplay';
-import { TransactionFormBuilder } from './components/TransactionFormBuilder';
-import { TokenTransferWizard } from './components/TokenTransferWizard';
-import { PortfolioDashboard } from './components/PortfolioDashboard';
 import { SyncStatus, OfflineIndicator } from './components/SyncStatus';
 import { SearchPage } from './components/SearchPage';
 import { ResponsiveNav, Breadcrumb, ContextualNav, Dashboard, LiveDataFeed, NotificationCenter, NotificationPreferences, AlertRules } from './components';
+import { PreferenceManagement, PreferenceAnalytics } from './components';
 import { NavItem } from './services/navigation/types';
 import { DataPoint } from './services/visualization/types';
+import { ThemeCustomizer } from './components/ThemeCustomizer';
 import { ThemeToggle } from './components/ThemeToggle';
+import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { TutorialOverlay, TutorialLauncher } from './components/TutorialOverlay';
-import { InstallBanner, PushToggle } from './components/PWAControls';
+import { InstallBanner } from './components/PWAControls';
+import { PWADashboard } from './components/PWADashboard';
 import { useConnectivity } from './context/ConnectivityContext';
 import { useStorage } from './context/StorageContext';
 import { useTransactionQueue } from './context/TransactionQueueContext';
-import { DashboardBuilder } from './builder/DashboardBuilder';
-import { WorkflowLauncher } from './workflow';
 import { DataTable } from './table';
 import type { ColumnDef } from './table';
 import type { CachedTransaction } from './services/storage/types';
@@ -35,6 +35,18 @@ type ActiveTab =
   | 'search'
   | 'dashboard'
   | 'settings';
+// Lazy-loaded heavy components for code splitting
+const TransactionFormBuilder = lazy(() => import('./components/TransactionFormBuilder').then(m => ({ default: m.TransactionFormBuilder })));
+const TokenTransferWizard = lazy(() => import('./components/TokenTransferWizard').then(m => ({ default: m.TokenTransferWizard })));
+const PortfolioDashboard = lazy(() => import('./components/PortfolioDashboard').then(m => ({ default: m.PortfolioDashboard })));
+const DashboardBuilder = lazy(() => import('./builder/DashboardBuilder').then(m => ({ default: m.DashboardBuilder })));
+const WorkflowLauncher = lazy(() => import('./workflow').then(m => ({ default: m.WorkflowLauncher })));
+const PerformanceDashboard = lazy(() => import('./components/PerformanceDashboard').then(m => ({ default: m.PerformanceDashboard })));
+const AccessibilityDashboard = lazy(() => import('./components/AccessibilityDashboard').then(m => ({ default: m.AccessibilityDashboard })));
+const ComponentDocs = lazy(() => import('./components/ComponentDocs').then(m => ({ default: m.ComponentDocs })));
+const ErrorDashboard = lazy(() => import('./components/ErrorDashboard').then(m => ({ default: m.ErrorDashboard })));
+
+const LazyFallback = () => <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>Loading…</div>;
 
 function App(): JSX.Element {
   const { isOnline } = useConnectivity();
@@ -110,6 +122,42 @@ function App(): JSX.Element {
       label: 'Settings',
       icon: '⚙️',
       onClick: () => { setActiveTab('settings'); setBreadcrumbs([{ label: 'Home' }, { label: 'Settings' }]); },
+    },
+    {
+      id: 'performance',
+      label: 'Performance',
+      icon: '⚡',
+      onClick: () => {
+        setActiveTab('performance' as any);
+        setBreadcrumbs([{ label: 'Home' }, { label: 'Performance' }]);
+      },
+    },
+    {
+      id: 'accessibility',
+      label: 'Accessibility',
+      icon: '♿',
+      onClick: () => {
+        setActiveTab('accessibility' as any);
+        setBreadcrumbs([{ label: 'Home' }, { label: 'Accessibility' }]);
+      },
+    },
+    {
+      id: 'docs',
+      label: 'Component Docs',
+      icon: '📚',
+      onClick: () => {
+        setActiveTab('docs' as any);
+        setBreadcrumbs([{ label: 'Home' }, { label: 'Component Docs' }]);
+      },
+    },
+    {
+      id: 'errors',
+      label: 'Error Tracking',
+      icon: '🐛',
+      onClick: () => {
+        setActiveTab('error-tracking' as any);
+        setBreadcrumbs([{ label: 'Home' }, { label: 'Error Tracking' }]);
+      },
     },
   ];
 
@@ -198,9 +246,11 @@ function App(): JSX.Element {
           <OfflineIndicator />
           <ConnectivityStatus />
           <NotificationCenter />
-          <PushToggle />
+          <PWADashboard />
           <TutorialLauncher />
+          <ThemeCustomizer />
           <ThemeToggle />
+          <LanguageSwitcher />
           <button
             className={builderMode ? 'btn btn-primary' : 'btn btn-secondary'}
             onClick={() => setBuilderMode((v) => !v)}
@@ -260,6 +310,47 @@ function App(): JSX.Element {
               </section>
 
               {activeTab === 'balances' && (
+          <section className="card mb-lg" style={{ marginTop: 'var(--spacing-lg)' }}>
+            <div className="card-header">
+              <span className="card-title">Quick Actions</span>
+            </div>
+            
+            <div className="flex gap-md items-center">
+              <button
+                onClick={handleSubmitTransaction}
+                disabled={isDemoLoading}
+                className="btn btn-primary"
+              >
+                {isDemoLoading ? (
+                  <>
+                    <span className="spinner" style={{ width: '16px', height: '16px' }} />
+                    Creating...
+                  </>
+                ) : (
+                  '+ Queue Transfer (Demo)'
+                )}
+              </button>
+      {/* Main Content */}
+      <main className="main-content container">
+        {builderMode ? (
+          <Suspense fallback={<LazyFallback />}>
+            <DashboardBuilder renderComponent={renderComponent} />
+          </Suspense>
+        ) : (
+        <>
+        {/* Demo Section - Create Transaction */}
+        <section className="card mb-lg">
+          <div className="card-header">
+            <span className="card-title">Quick Actions</span>
+          </div>
+          
+          <div className="flex gap-md items-center">
+            <button
+              onClick={handleSubmitTransaction}
+              disabled={isDemoLoading}
+              className="btn btn-primary"
+            >
+              {isDemoLoading ? (
                 <>
                   {!isOnline && (
                     <p className="text-warning mb-md">
@@ -306,6 +397,23 @@ function App(): JSX.Element {
                   />
                 </>
               )}
+            {activeTab === 'analytics' && (
+              <Suspense fallback={<LazyFallback />}>
+                <PortfolioDashboard />
+              </Suspense>
+            )}
+
+            {activeTab === 'transfer' && (
+              <Suspense fallback={<LazyFallback />}>
+                <TokenTransferWizard />
+              </Suspense>
+            )}
+
+            {activeTab === 'build' && (
+              <Suspense fallback={<LazyFallback />}>
+                <TransactionFormBuilder />
+              </Suspense>
+            )}
 
               {activeTab === 'workflows' && (
                 <WorkflowLauncher
@@ -327,6 +435,67 @@ function App(): JSX.Element {
                     </pre>
                   )}
                 />
+              </>
+            )}
+
+            {activeTab === 'workflows' && (
+              <Suspense fallback={<LazyFallback />}>
+                <WorkflowLauncher
+                  onComplete={(templateId, values) =>
+                    console.info('Workflow completed:', templateId, values)
+                  }
+                />
+              </Suspense>
+            )}
+
+            {activeTab === 'table' && (
+              <DataTable
+                caption="All Transactions"
+                data={[...pendingTransactions, ...syncedTransactions]}
+                columns={txColumns}
+                getRowId={(r) => r.id}
+                bulkActions={[{ label: 'Delete selected', icon: '🗑', action: (rows) => rows.forEach((r) => deleteTransaction(r.id)) }]}
+                exportFormats={['csv', 'json']}
+                renderExpanded={(r) => (
+                  <pre style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', whiteSpace: 'pre-wrap' }}>
+                    {JSON.stringify(r.params, null, 2)}
+                  </pre>
+                )}
+              />
+            )}
+          </div>
+
+          {/* Sidebar */}
+          <div>
+            <SyncStatus />
+            
+            {/* Storage Info */}
+            <div className="card mt-lg">
+              <div className="card-header">
+                <span className="card-title">Storage</span>
+              </div>
+              
+              <button
+                onClick={syncNow}
+                disabled={!isOnline || syncStatus.isSyncing}
+                className="btn btn-secondary"
+              >
+                {syncStatus.isSyncing ? 'Syncing...' : 'Sync Now'}
+              </button>
+              
+              <span className="text-muted" style={{ marginLeft: 'auto' }}>
+                {pendingTransactions.length} pending • {syncedTransactions.length} synced
+              </span>
+            </div>
+          </section>
+
+          {activeTab === 'balances' && (
+            <>
+              <h2 className="mb-md">Token Balances</h2>
+              {isOnline ? (
+                <p className="text-muted mb-md">You're online. Balances are fetched from the network.</p>
+              ) : (
+                <p className="text-warning mb-md">You're offline. Showing cached balances.</p>
               )}
 
               {activeTab === 'search' && (
@@ -356,7 +525,45 @@ function App(): JSX.Element {
                   </div>
                 </>
               )}
+          {activeTab === 'settings' && (
+            <>
+              <h2 className="mb-md">Settings & Preferences</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <NotificationPreferences userId="user-1" />
+                </div>
+                <div>
+                  <AlertRules />
+                </div>
+              </div>
+              <div style={{ marginTop: '24px' }}>
+                <PreferenceManagement />
+              </div>
             </>
+          )}
+
+          {(activeTab as string) === 'performance' && (
+            <Suspense fallback={<LazyFallback />}>
+              <PerformanceDashboard />
+            </Suspense>
+          )}
+
+          {(activeTab as string) === 'accessibility' && (
+            <Suspense fallback={<LazyFallback />}>
+              <AccessibilityDashboard />
+            </Suspense>
+          )}
+
+          {(activeTab as string) === 'docs' && (
+            <Suspense fallback={<LazyFallback />}>
+              <ComponentDocs />
+            </Suspense>
+          )}
+
+          {(activeTab as string) === 'error-tracking' && (
+            <Suspense fallback={<LazyFallback />}>
+              <ErrorDashboard />
+            </Suspense>
           )}
         </main>
       </div>
