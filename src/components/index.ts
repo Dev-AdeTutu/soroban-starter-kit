@@ -26,6 +26,7 @@ export { TokenTransferWizard } from './TokenTransferWizard';
 export { PortfolioDashboard } from './PortfolioDashboard';
 export { FinancialChart, exportChartCSV, exportChartSVG, exportChartPNG } from './FinancialChart';
 export { PortfolioAnalytics } from './PortfolioAnalytics';
+export { AdminPanel } from './AdminPanel';
 export { SecurityDashboard } from './SecurityDashboard';
 export { TransactionHistory } from './TransactionHistory';
 export { ContractInteraction } from './ContractInteraction';

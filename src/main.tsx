@@ -8,6 +8,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { TutorialProvider } from './context/TutorialContext';
 import { PWAProvider } from './context/PWAContext';
 import { SecurityProvider } from './context/SecurityContext';
+import { AdminProvider } from './context/AdminContext';
 import './styles/index.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -18,9 +19,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <SecurityProvider>
             <ConnectivityProvider>
               <StorageProvider>
-                <TransactionQueueProvider>
-                  <App />
-                </TransactionQueueProvider>
+                <AdminProvider>
+                  <TransactionQueueProvider>
+                    <App />
+                  </TransactionQueueProvider>
+                </AdminProvider>
               </StorageProvider>
             </ConnectivityProvider>
           </SecurityProvider>

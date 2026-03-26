@@ -6,6 +6,7 @@ import { TransactionFormBuilder } from './components/TransactionFormBuilder';
 import { TokenTransferWizard } from './components/TokenTransferWizard';
 import { PortfolioDashboard } from './components/PortfolioDashboard';
 import { PortfolioAnalytics } from './components/PortfolioAnalytics';
+import { AdminPanel } from './components/AdminPanel';
 import { SyncStatus, OfflineIndicator } from './components/SyncStatus';
 import { SearchPage } from './components/SearchPage';
 import { ResponsiveNav, Breadcrumb, ContextualNav, Dashboard, LiveDataFeed, NotificationCenter, NotificationPreferences, AlertRules } from './components';
@@ -317,6 +318,13 @@ function App(): JSX.Element {
             📈 Analytics
           </button>
           <button
+            onClick={() => setActiveTab('admin' as any)}
+            className={(activeTab as string) === 'admin' ? 'btn btn-primary' : 'btn btn-secondary'}
+            style={{ backgroundColor: (activeTab as string) === 'admin' ? 'var(--color-highlight)' : 'transparent' }}
+          >
+            🛡 Admin
+          </button>
+          <button
             onClick={() => setActiveTab('transfer')}
             className={activeTab === 'transfer' ? 'btn btn-primary' : 'btn btn-secondary'}
             style={{ backgroundColor: activeTab === 'transfer' ? 'var(--color-highlight)' : 'transparent' }}
@@ -387,6 +395,10 @@ function App(): JSX.Element {
 
             {activeTab === 'analytics' && (
               <PortfolioAnalytics />
+            )}
+
+            {(activeTab as string) === 'admin' && (
+              <AdminPanel />
             )}
 
             {activeTab === 'transfer' && (
