@@ -18,7 +18,7 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.contracts
     volumes:
-      - ../soroban-starter-kit:/contracts
+      - ../contracts:/contracts
       - cargo-cache:/usr/local/cargo/registry
     env_file: ../.env
 
