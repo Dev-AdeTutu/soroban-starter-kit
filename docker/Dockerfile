@@ -1,21 +1,35 @@
-# Frontend dev server
-FROM node:20-slim AS frontend
+# Multi-stage Dockerfile for Soroban Starter Kit
+FROM node:20-alpine AS base
+
+# Install system dependencies
+RUN apk add --no-cache \
+    bash \
+    curl \
+    git \
+    build-base \
+    python3 \
+    make \
+    g++
 
 WORKDIR /app
 
-# Install dependencies first (layer cache)
-COPY package.json package-lock.json ./
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production && npm cache clean --force
+
+# Development stage
+FROM base AS frontend
+
+# Install all dependencies (including dev)
 RUN npm ci
 
+# Copy source code
 COPY . .
 
+# Expose port
 EXPOSE 3000
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 
-# ── Production build ──────────────────────────────────────────────────────────
-FROM frontend AS build
-RUN npm run build
-
-FROM nginx:alpine AS prod
-COPY --from=build /app/dist /usr/share/nginx/html
-EXPOSE 80
+# Start development server
+CMD ["npm", "run", "dev"]

@@ -1,8 +1,6 @@
 # Soroban Contract Templates
 
-A curated, well-documented collection of production-ready, modular Soroban smart contract templates and examples. These help new and experienced developers quickly bootstrap common use cases on Soroban (Stellar's smart contract platform), lowering the barrier to building dApps, DeFi, NFTs, payments, and more.
-
-This repository aims to fill gaps beyond the official [stellar/soroban-examples](https://github.com/stellar/soroban-examples) by including more real-world patterns, best practices, comprehensive tests, deployment scripts, and frontend integration stubs.
+A curated collection of production-ready Soroban smart contract templates. These templates help developers quickly bootstrap common use cases on Soroban (Stellar's smart contract platform) for DeFi, payments, governance, and more.
 
 ## 🚀 Quick Start
 
@@ -22,15 +20,12 @@ soroban contract build
 cargo test
 ```
 
-## 📦 Included Templates
+## 📦 Contract Templates
 
 | Template | Description | Use Cases | Status |
 |----------|-------------|-----------|---------|
 | **Token** | Custom fungible token with mint/burn/admin controls | DeFi tokens, governance tokens, utility tokens | ✅ Complete |
 | **Escrow** | Two-party escrow with timeout and refund mechanism | P2P trading, service payments, milestone payments | ✅ Complete |
-| **Voting** | Governance/DAO voting with balance-weighted votes | DAOs, community governance, proposal systems | 🚧 Planned |
-| **Subscription** | Recurring payment streaming using timestamps | SaaS payments, content subscriptions, memberships | 🚧 Planned |
-| **NFT Mint** | Simple NFT minting with metadata storage | Digital collectibles, certificates, gaming assets | 🚧 Planned |
 
 ### Token Contract Features
 - **Standard Interface**: Full Soroban token compatibility
@@ -53,14 +48,12 @@ Each template includes:
 - ✅ Comprehensive unit tests (8+ test cases each)
 - ✅ Deployment scripts with examples
 - ✅ Usage examples and documentation
-- ✅ React Native mobile integration
 
 ## 🛠 Prerequisites
 
 - [Rust](https://rustup.rs/) (latest stable)
 - [Soroban CLI](https://soroban.stellar.org/docs/getting-started/setup#install-the-soroban-cli)
-- [Node.js](https://nodejs.org/) (for React Native mobile app)
-- [React Native development environment](https://reactnative.dev/docs/environment-setup)
+- [Docker](https://www.docker.com/) (for local Stellar node)
 
 ## 📖 Usage
 
@@ -85,40 +78,21 @@ cd contracts/[template-name]
 ./scripts/deploy.sh testnet
 ```
 
-### Frontend Integration
+### Local Development
 
-Each contract includes a complete React Native mobile app example in `examples/react-native/` showing how to:
-- Connect with Stellar wallets (Freighter, Albedo)
-- Deploy contracts from mobile
-- Interact with all contract functions
-- Handle transaction states and errors
-- Provide native iOS/Android user experience
+Start a local Stellar node with Soroban RPC:
 
 ```bash
-# Run the React Native example
-cd examples/react-native
-npm install
-npm run ios  # or npm run android
+docker compose up stellar-node
 ```
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on:
-- Adding new contract templates
-- Improving existing contracts
-- Fixing bugs and issues
-- Writing documentation
-
-## 🌊 Stellar Wave Program
-
-This repository is applying to the [Stellar Wave Program](https://www.drips.network/wave) on Drips.network! Look for issues labeled `stellar-wave` for bounty opportunities to contribute and earn rewards.
-
-### How to Contribute for Rewards:
-1. Browse [open issues](https://github.com/your-username/soroban-contract-templates/issues)
-2. Look for `stellar-wave` labeled issues with point values
-3. Comment to claim an issue
-4. Submit a PR with your solution
-5. Earn rewards through Drips after PR approval!
+We welcome contributions! Please:
+- Add new contract templates following the existing structure
+- Include comprehensive tests for all functionality
+- Provide clear documentation and usage examples
+- Follow Rust and Soroban best practices
 
 ## 📚 Resources
 
@@ -131,12 +105,6 @@ This repository is applying to the [Stellar Wave Program](https://www.drips.netw
 ## 📄 License
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Stellar Development Foundation for Soroban
-- The Stellar developer community
-- Contributors and maintainers
 
 ---
 
