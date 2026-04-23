@@ -62,6 +62,7 @@ pub enum EscrowError {
     AlreadyInitialized = 5,
     NotInitialized = 6,
     InsufficientFunds = 7,
+    InvalidAmount = 8,
     InvalidParties = 8,
 }
 
@@ -80,6 +81,8 @@ impl EscrowContract {
             return Err(EscrowError::AlreadyInitialized);
         }
 
+        if amount <= 0 {
+            return Err(EscrowError::InvalidAmount);
         if buyer == seller || buyer == arbiter || seller == arbiter {
             return Err(EscrowError::InvalidParties);
         }
