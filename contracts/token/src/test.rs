@@ -1,7 +1,7 @@
 #![cfg(test)]
 
 use super::*;
-use soroban_sdk::{testutils::Address as _, Address, Env, String};
+use soroban_sdk::{testutils::{Address as _, Ledger as _}, Address, Env, String};
 
 fn create_token_contract(env: &Env) -> (TokenContractClient<'_>, Address) {
     let contract_address = env.register_contract(None, TokenContract);
@@ -179,4 +179,36 @@ fn test_set_admin() {
     client.set_admin(&new_admin);
 
     assert_eq!(client.admin(), new_admin);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #2)")]
+fn test_expired_allowance() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let admin = Address::generate(&env);
+    let user1 = Address::generate(&env);
+    let user2 = Address::generate(&env);
+    let spender = Address::generate(&env);
+    let client = init_token(&env, &admin);
+
+    let mint_amount = 1000i128;
+    client.mint(&user1, &mint_amount);
+
+    let approve_amount = 500i128;
+    let expiration = env.ledger().sequence() + 10;
+    client.approve(&user1, &spender, &approve_amount, &expiration);
+
+    assert_eq!(client.allowance(&user1, &spender), approve_amount);
+
+    // Advance ledger past expiration
+    env.ledger().with_mut(|li| li.sequence_number = expiration + 1);
+
+    // Allowance should be expired
+    assert_eq!(client.allowance(&user1, &spender), 0);
+
+    // transfer_from should fail with InsufficientAllowance
+    let transfer_amount = 100i128;
+    client.transfer_from(&spender, &user1, &user2, &transfer_amount);
 }
