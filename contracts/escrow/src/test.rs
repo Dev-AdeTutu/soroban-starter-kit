@@ -86,7 +86,7 @@ fn test_initialize_twice() {
 }
 
 #[test]
-#[should_panic(expected = "Deadline must be at least MIN_DEADLINE_BUFFER ledgers in the future")]
+#[should_panic(expected = "Error(Contract, #8)")]
 fn test_initialize_past_deadline() {
     let env = Env::default();
     env.mock_all_auths();
@@ -187,6 +187,7 @@ fn test_arbiter_resolve_to_seller() {
     env.mock_all_auths();
 
     let (client, ..) = setup_funded_escrow(&env);
+    client.raise_dispute();
     client.resolve_dispute(&true);
 
     assert_eq!(client.get_state(), Some(EscrowState::Completed));
@@ -198,6 +199,7 @@ fn test_arbiter_resolve_to_buyer() {
     env.mock_all_auths();
 
     let (client, ..) = setup_funded_escrow(&env);
+    client.raise_dispute();
     client.resolve_dispute(&false);
 
     assert_eq!(client.get_state(), Some(EscrowState::Refunded));

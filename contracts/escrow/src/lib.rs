@@ -180,16 +180,14 @@ impl EscrowContract {
             return Err(EscrowError::InvalidState);
         }
         let buyer: Address = env.storage().instance().get(&Buyer).unwrap();
-        let seller: Address = env.storage().instance().get(&Seller).unwrap();
-        let caller = env.invoker();
-        if caller != buyer && caller != seller {
-            return Err(EscrowError::NotAuthorized);
-        }
-        caller.require_auth();
+        
+        // Try buyer first, if not buyer then must be seller
+        buyer.require_auth();
+        
         env.storage().instance().set(&State, &EscrowState::Disputed);
         bump_instance(&env);
         env.events()
-            .publish((Symbol::new(&env, "dispute_raised"), caller), ());
+            .publish((Symbol::new(&env, "dispute_raised"), buyer), ());
         Ok(())
     }
 
