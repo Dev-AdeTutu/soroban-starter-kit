@@ -214,6 +214,151 @@ fn test_expired_allowance() {
 }
 
 #[test]
+#[should_panic(expected = "Error(Contract, #1)")]
+fn test_mint_negative_amount() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let admin = Address::generate(&env);
+    let user = Address::generate(&env);
+    let client = init_token(&env, &admin);
+
+    // Try to mint negative amount - should fail with InsufficientBalance
+    client.mint(&user, &-1i128);
+}
+
+#[test]
+fn test_mint_zero_amount() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let admin = Address::generate(&env);
+    let user = Address::generate(&env);
+    let client = init_token(&env, &admin);
+
+    // Mint zero amount - should succeed but not change balance
+    client.mint(&user, &0i128);
+    assert_eq!(client.balance(&user), 0i128);
+    assert_eq!(client.total_supply(), 0i128);
+}
+
+#[test]
+fn test_mint_one_amount() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let admin = Address::generate(&env);
+    let user = Address::generate(&env);
+    let client = init_token(&env, &admin);
+
+    // Mint 1 token
+    client.mint(&user, &1i128);
+    assert_eq!(client.balance(&user), 1i128);
+    assert_eq!(client.total_supply(), 1i128);
+}
+
+#[test]
+fn test_mint_max_amount() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let admin = Address::generate(&env);
+    let user = Address::generate(&env);
+    let client = init_token(&env, &admin);
+
+    // Mint i128::MAX tokens
+    client.mint(&user, &i128::MAX);
+    assert_eq!(client.balance(&user), i128::MAX);
+    assert_eq!(client.total_supply(), i128::MAX);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #1)")]
+fn test_burn_negative_amount() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let admin = Address::generate(&env);
+    let user = Address::generate(&env);
+    let client = init_token(&env, &admin);
+
+    client.mint(&user, &1000i128);
+
+    // Try to burn negative amount - should fail with InsufficientBalance
+    client.burn_admin(&user, &-1i128);
+}
+
+#[test]
+fn test_burn_zero_amount() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let admin = Address::generate(&env);
+    let user = Address::generate(&env);
+    let client = init_token(&env, &admin);
+
+    client.mint(&user, &1000i128);
+
+    // Burn zero amount - should succeed but not change balance
+    client.burn_admin(&user, &0i128);
+    assert_eq!(client.balance(&user), 1000i128);
+    assert_eq!(client.total_supply(), 1000i128);
+}
+
+#[test]
+fn test_burn_one_amount() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let admin = Address::generate(&env);
+    let user = Address::generate(&env);
+    let client = init_token(&env, &admin);
+
+    client.mint(&user, &1000i128);
+
+    // Burn 1 token
+    client.burn_admin(&user, &1i128);
+    assert_eq!(client.balance(&user), 999i128);
+    assert_eq!(client.total_supply(), 999i128);
+}
+
+#[test]
+fn test_transfer_zero_amount() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let admin = Address::generate(&env);
+    let user1 = Address::generate(&env);
+    let user2 = Address::generate(&env);
+    let client = init_token(&env, &admin);
+
+    client.mint(&user1, &1000i128);
+
+    // Transfer 0 tokens - should succeed but not change balances
+    client.transfer(&user1, &user2, &0i128);
+    assert_eq!(client.balance(&user1), 1000i128);
+    assert_eq!(client.balance(&user2), 0i128);
+}
+
+#[test]
+fn test_transfer_one_amount() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let admin = Address::generate(&env);
+    let user1 = Address::generate(&env);
+    let user2 = Address::generate(&env);
+    let client = init_token(&env, &admin);
+
+    client.mint(&user1, &1000i128);
+
+    // Transfer 1 token
+    client.transfer(&user1, &user2, &1i128);
+    assert_eq!(client.balance(&user1), 999i128);
+    assert_eq!(client.balance(&user2), 1i128);
+}
+
+#[test]
 fn test_unauthorized_mint_fails() {
     let env = Env::default();
     
