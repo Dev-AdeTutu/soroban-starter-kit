@@ -81,7 +81,7 @@ fn test_initialize_twice() {
 }
 
 #[test]
-#[should_panic(expected = "Deadline must be in the future")]
+#[should_panic(expected = "Deadline must be at least MIN_DEADLINE_BUFFER ledgers in the future")]
 fn test_initialize_past_deadline() {
     let env = Env::default();
     env.mock_all_auths();
@@ -110,6 +110,8 @@ fn test_mark_delivered() {
     client.mark_delivered();
 
     assert_eq!(client.get_state(), EscrowState::Delivered);
+    // Verify state change
+    assert_eq!(client.get_state(), Some(EscrowState::Delivered));
 }
 
 #[test]
@@ -122,6 +124,8 @@ fn test_approve_delivery() {
     client.approve_delivery();
 
     assert_eq!(client.get_state(), EscrowState::Completed);
+    // Verify completion
+    assert_eq!(client.get_state(), Some(EscrowState::Completed));
 }
 
 #[test]
@@ -190,6 +194,8 @@ fn test_arbiter_resolve_to_seller() {
     client.resolve_dispute(&true);
 
     assert_eq!(client.get_state(), EscrowState::Completed);
+    // Verify completion
+    assert_eq!(client.get_state(), Some(EscrowState::Completed));
 }
 
 #[test]
@@ -201,4 +207,7 @@ fn test_arbiter_resolve_to_buyer() {
     client.resolve_dispute(&false);
 
     assert_eq!(client.get_state(), EscrowState::Refunded);
+}
+    // Verify refund
+    assert_eq!(client.get_state(), Some(EscrowState::Refunded));
 }

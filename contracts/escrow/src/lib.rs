@@ -3,6 +3,17 @@
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, token, Address, Env, Symbol,
 };
+
+/// Minimum TTL before a bump is needed (~7 days at 5s/ledger).
+const BUMP_THRESHOLD: u32 = 120_960;
+/// TTL extended to on every write (~30 days at 5s/ledger).
+const BUMP_AMOUNT: u32 = 518_400;
+/// Minimum ledgers from now a deadline must be set to (~8 minutes at 5s/ledger).
+const MIN_DEADLINE_BUFFER: u32 = 100;
+
+fn bump_instance(env: &Env) {
+    env.storage().instance().extend_ttl(BUMP_THRESHOLD, BUMP_AMOUNT);
+}
  /// script
 /// Escrow contract for secure two-party transactions
 /// 
@@ -68,9 +79,9 @@ impl EscrowContract {
             return Err(EscrowError::AlreadyInitialized);
         }
 
-        // Verify deadline is in the future
-        if deadline_ledger <= env.ledger().sequence() {
-            panic!("Deadline must be in the future");
+        // Verify deadline is sufficiently in the future
+        if deadline_ledger < env.ledger().sequence() + MIN_DEADLINE_BUFFER {
+            panic!("Deadline must be at least MIN_DEADLINE_BUFFER ledgers in the future");
         }
 
         // Store escrow details
@@ -83,6 +94,7 @@ impl EscrowContract {
         env.storage().instance().set(&DataKey::State, &EscrowState::Created);
         env.storage().instance().set(&DataKey::BuyerApproved, &false);
         env.storage().instance().set(&DataKey::SellerDelivered, &false);
+        bump_instance(&env);
 
         // Emit event
         env.events().publish(
@@ -115,6 +127,7 @@ impl EscrowContract {
 
         // Update state
         env.storage().instance().set(&DataKey::State, &EscrowState::Funded);
+        bump_instance(&env);
 
         // Emit event
         env.events().publish((Symbol::new(&env, "escrow_funded"), buyer), amount);
@@ -138,6 +151,7 @@ impl EscrowContract {
         // Mark as delivered
         env.storage().instance().set(&DataKey::SellerDelivered, &true);
         env.storage().instance().set(&DataKey::State, &EscrowState::Delivered);
+        bump_instance(&env);
 
         // Emit event
         env.events().publish((Symbol::new(&env, "delivery_marked"), seller), ());
@@ -272,23 +286,21 @@ impl EscrowContract {
     }
 
     /// Get escrow details
-    pub fn get_escrow_info(env: Env) -> (Address, Address, Address, Address, i128, u32, EscrowState) {
-        let buyer: Address = env.storage().instance().get(&DataKey::Buyer).unwrap();
-        let seller: Address = env.storage().instance().get(&DataKey::Seller).unwrap();
-        let arbiter: Address = env.storage().instance().get(&DataKey::Arbiter).unwrap();
-        let token_contract: Address = env.storage().instance().get(&DataKey::TokenContract).unwrap();
-        let amount: i128 = env.storage().instance().get(&DataKey::Amount).unwrap();
-        let deadline: u32 = env.storage().instance().get(&DataKey::Deadline).unwrap();
-        let state: EscrowState = env.storage().instance().get(&DataKey::State).unwrap();
+    pub fn get_escrow_info(env: Env) -> Result<(Address, Address, Address, Address, i128, u32, EscrowState), EscrowError> {
+        let buyer: Address = env.storage().instance().get(&DataKey::Buyer).ok_or(EscrowError::NotInitialized)?;
+        let seller: Address = env.storage().instance().get(&DataKey::Seller).ok_or(EscrowError::NotInitialized)?;
+        let arbiter: Address = env.storage().instance().get(&DataKey::Arbiter).ok_or(EscrowError::NotInitialized)?;
+        let token_contract: Address = env.storage().instance().get(&DataKey::TokenContract).ok_or(EscrowError::NotInitialized)?;
+        let amount: i128 = env.storage().instance().get(&DataKey::Amount).ok_or(EscrowError::NotInitialized)?;
+        let deadline: u32 = env.storage().instance().get(&DataKey::Deadline).ok_or(EscrowError::NotInitialized)?;
+        let state: EscrowState = env.storage().instance().get(&DataKey::State).ok_or(EscrowError::NotInitialized)?;
 
-        (buyer, seller, arbiter, token_contract, amount, deadline, state)
+        Ok((buyer, seller, arbiter, token_contract, amount, deadline, state))
     }
 
     /// Get current state
-    pub fn get_state(env: Env) -> EscrowState {
-        env.storage().instance()
-            .get(&DataKey::State)
-            .unwrap_or(EscrowState::Created)
+    pub fn get_state(env: Env) -> Option<EscrowState> {
+        env.storage().instance().get(&DataKey::State)
     }
 
     /// Check if deadline has passed
@@ -297,6 +309,14 @@ impl EscrowContract {
             .get(&DataKey::Deadline)
             .unwrap_or(0);
         env.ledger().sequence() > deadline
+    }
+
+    /// Extend storage TTL for an active escrow. Anyone can call this.
+    pub fn bump(env: Env) {
+        if !env.storage().instance().has(&DataKey::State) {
+            panic!("Not initialized");
+        }
+        bump_instance(&env);
     }
 
     // Internal helper functions
@@ -311,6 +331,7 @@ impl EscrowContract {
 
         // Update state
         env.storage().instance().set(&DataKey::State, &EscrowState::Completed);
+        bump_instance(&env);
 
         // Emit event
         env.events().publish((Symbol::new(&env, "funds_released"), seller), amount);
@@ -329,6 +350,7 @@ impl EscrowContract {
 
         // Update state
         env.storage().instance().set(&DataKey::State, &EscrowState::Refunded);
+        bump_instance(&env);
 
         // Emit event
         env.events().publish((Symbol::new(&env, "funds_refunded"), buyer), amount);
