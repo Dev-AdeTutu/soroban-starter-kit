@@ -34,6 +34,7 @@ fn test_initialize() {
 }
 
 #[test]
+#[should_panic]
 #[should_panic(expected = "Error(Contract, #4)")]
 fn test_initialize_twice() {
     let env = Env::default();
@@ -190,6 +191,9 @@ fn test_allowance_ttl_expiry() {
         l.min_persistent_entry_ttl = 500;
         l.max_entry_ttl = 1000;
     });
+fn test_burn_from() {
+    let env = Env::default();
+    env.mock_all_auths();
 
     let admin = Address::generate(&env);
     let user = Address::generate(&env);
@@ -258,6 +262,20 @@ fn test_balance_persistent_ttl_expiry() {
     env.as_contract(&contract_address, || {
         assert_eq!(env.storage().persistent().get_ttl(&DataKey::Balance(user.clone())), 0);
     });
+
+    let mint_amount = 1000i128;
+    client.mint(&user, &mint_amount);
+
+    let approve_amount = 500i128;
+    let expiration = env.ledger().sequence() + 100;
+    client.approve(&user, &spender, &approve_amount, &expiration);
+
+    let burn_amount = 200i128;
+    client.burn_from(&spender, &user, &burn_amount);
+
+    assert_eq!(client.balance(&user), mint_amount - burn_amount);
+    assert_eq!(client.total_supply(), mint_amount - burn_amount);
+    assert_eq!(client.allowance(&user, &spender), approve_amount - burn_amount);
 }
 
 #[test]
