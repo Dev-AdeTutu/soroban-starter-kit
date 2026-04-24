@@ -5,6 +5,8 @@ mod errors;
 mod events;
 mod storage;
 mod test;
+#[cfg(test)]
+mod prop_test;
 
 pub use errors::TokenError;
 pub use storage::{AllowanceDataKey, DataKey, MetadataKey};
